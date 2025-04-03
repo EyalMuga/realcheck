@@ -27,17 +27,21 @@
     <p>בדיקת עסקאות נדל\"ן חכמה למשקיעים ישראלים</p>
   </header>
   <div class="container">
-    <label for="address">כתובת הנכס:</label>
-    <input type="text" id="address" placeholder="לדוגמה: Olympou 23, Thessaloniki" />
+    <label for="area">בחר אזור:</label>
+    <select id="area">
+      <option value="center">מרכז סלוניקי</option>
+      <option value="kalamaria">קמנבריה</option>
+      <option value="vardaris">ווארדאריס</option>
+      <option value="toumba">טומבה</option>
+      <option value="ano_poli">אנו פוליס</option>
+      <option value="monastiriou">הארון מונסטיריון</option>
+    </select>
 
     <label for="price">מחיר רכישה (באירו):</label>
     <input type="number" id="price" value="90000" />
 
     <label for="size">גודל הדירה (במ\"ר):</label>
     <input type="number" id="size" value="50" />
-
-    <label for="rent">שכר דירה חודשי (באירו):</label>
-    <input type="number" id="rent" value="500" />
 
     <label><input type="checkbox" id="includeCosts" /> כולל הוצאות רכישה (9.3%)</label>
 
@@ -50,36 +54,14 @@
   </div>
 
   <script>
-    const areaProfiles = [
-      { name: "מרכז סלוניקי", min_price: 1800, max_price: 2500, keywords: ["center", "city center", "Σιντριβάνι", "Αριστοτέλους"] },
-      { name: "קמנבריה", min_price: 1100, max_price: 1450, keywords: ["kalamaria", "Καλαμαριά"] },
-      { name: "ווארדאריס", min_price: 1500, max_price: 1900, keywords: ["vardaris", "βάρδαρης"] },
-      { name: "טומבה", min_price: 1250, max_price: 1600, keywords: ["toumba", "τούμπα"] },
-      { name: "אנו פוליס", min_price: 1400, max_price: 1800, keywords: ["ano poli", "άνω πόλη"] },
-      { name: "הארון מונסטיריון", min_price: 1000, max_price: 1350, keywords: ["monastiriou", "μονστηρίου"] },
-    ];
-
-    let autocomplete;
-    function initAutocomplete() {
-      autocomplete = new google.maps.places.Autocomplete(
-        document.getElementById('address'),
-        { types: ['geocode'], componentRestrictions: { country: 'gr' } }
-      );
-    }
-
-    window.onload = initAutocomplete;
-
-    function detectAreaFromAddress(address) {
-      const lower = address.toLowerCase();
-      for (const area of areaProfiles) {
-        for (const keyword of area.keywords) {
-          if (lower.includes(keyword.toLowerCase())) {
-            return area;
-          }
-        }
-      }
-      return null;
-    }
+    const areaProfiles = {
+      "center": { name: "מרכז סלוניקי", min_price: 1800, max_price: 2500 },
+      "kalamaria": { name: "קמנבריה", min_price: 1100, max_price: 1450 },
+      "vardaris": { name: "ווארדאריס", min_price: 1500, max_price: 1900 },
+      "toumba": { name: "טומבה", min_price: 1250, max_price: 1600 },
+      "ano_poli": { name: "אנו פוליס", min_price: 1400, max_price: 1800 },
+      "monastiriou": { name: "הארון מונסטיריון", min_price: 1000, max_price: 1350 }
+    };
 
     function drawPriceBar(currentPrice, min, max) {
       const canvas = document.getElementById('priceGraph');
@@ -107,40 +89,42 @@
     }
 
     function analyzeDeal() {
-      const address = document.getElementById('address').value;
+      const areaKey = document.getElementById('area').value;
       const price = parseFloat(document.getElementById('price').value);
       const size = parseFloat(document.getElementById('size').value);
 
-      const area = detectAreaFromAddress(address);
-      if (area) {
-        const pricePerM2 = price / size;
-        drawPriceBar(pricePerM2, area.min_price, area.max_price);
+      const area = areaProfiles[areaKey];
+      const pricePerM2 = price / size;
+      drawPriceBar(pricePerM2, area.min_price, area.max_price);
 
-        const rent = parseFloat(document.getElementById('rent').value);
-        const rentRatio = (rent * 12) / price;
-        
-        let score = 0;
-        if (pricePerM2 < area.min_price) score += 2;
-        else if (pricePerM2 <= area.max_price) score += 4;
-        else score += 1;
-
-        if (rentRatio > 0.07) score += 4;
-        else if (rentRatio > 0.05) score += 3;
-        else if (rentRatio > 0.035) score += 2;
-        else score += 1;
-
-        let summary = '';
-        if (score >= 7) summary = '✅ עסקה מצוינת';
-        else if (score >= 5) summary = '👍 עסקה טובה';
-        else if (score >= 3) summary = '🤔 עסקה סבירה';
-        else summary = '⚠️ עסקה חלשה';
-
-        document.getElementById('summary').innerText = `${summary} (ציון: ${score}/8)`;
-        document.getElementById('progress').style.width = (score / 8) * 100 + '%';
-        document.getElementById('result').style.display = 'block';
-      } else {
-        document.getElementById('priceGraph').getContext('2d').clearRect(0, 0, 300, 60);
+      const includeCosts = document.getElementById('includeCosts').checked;
+      if (includeCosts) {
+        const updatedPrice = price * 1.093; // כולל הוצאות רכישה
+        drawPriceBar(updatedPrice / size, area.min_price, area.max_price);
       }
+
+      const rent = parseFloat(document.getElementById('rent').value);
+      const rentRatio = (rent * 12) / price;
+      
+      let score = 0;
+      if (pricePerM2 < area.min_price) score += 2;
+      else if (pricePerM2 <= area.max_price) score += 4;
+      else score += 1;
+
+      if (rentRatio > 0.07) score += 4;
+      else if (rentRatio > 0.05) score += 3;
+      else if (rentRatio > 0.035) score += 2;
+      else score += 1;
+
+      let summary = '';
+      if (score >= 7) summary = '✅ עסקה מצוינת';
+      else if (score >= 5) summary = '👍 עסקה טובה';
+      else if (score >= 3) summary = '🤔 עסקה סבירה';
+      else summary = '⚠️ עסקה חלשה';
+
+      document.getElementById('summary').innerText = `${summary} (ציון: ${score}/8)`;
+      document.getElementById('progress').style.width = (score / 8) * 100 + '%';
+      document.getElementById('result').style.display = 'block';
     }
   </script>
 
