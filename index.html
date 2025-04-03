@@ -115,6 +115,29 @@
       if (area) {
         const pricePerM2 = price / size;
         drawPriceBar(pricePerM2, area.min_price, area.max_price);
+
+        const rent = parseFloat(document.getElementById('rent').value);
+        const rentRatio = (rent * 12) / price;
+        
+        let score = 0;
+        if (pricePerM2 < area.min_price) score += 2;
+        else if (pricePerM2 <= area.max_price) score += 4;
+        else score += 1;
+
+        if (rentRatio > 0.07) score += 4;
+        else if (rentRatio > 0.05) score += 3;
+        else if (rentRatio > 0.035) score += 2;
+        else score += 1;
+
+        let summary = '';
+        if (score >= 7) summary = '✅ עסקה מצוינת';
+        else if (score >= 5) summary = '👍 עסקה טובה';
+        else if (score >= 3) summary = '🤔 עסקה סבירה';
+        else summary = '⚠️ עסקה חלשה';
+
+        document.getElementById('summary').innerText = `${summary} (ציון: ${score}/8)`;
+        document.getElementById('progress').style.width = (score / 8) * 100 + '%';
+        document.getElementById('result').style.display = 'block';
       } else {
         document.getElementById('priceGraph').getContext('2d').clearRect(0, 0, 300, 60);
       }
