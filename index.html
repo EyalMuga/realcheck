@@ -18,6 +18,7 @@
     .progress-bar { background: #cfd8dc; border-radius: 6px; overflow: hidden; margin-top: 0.5rem; }
     .progress { height: 10px; background: #2196f3; }
     label { font-weight: bold; margin-top: 1rem; display: block; }
+    .area-info { background: #f0f9ff; border: 1px solid #b3e5fc; padding: 10px; border-radius: 8px; margin-top: 1rem; font-size: 0.95rem; }
   </style>
 </head>
 <body>
@@ -27,10 +28,19 @@
   </header>
   <div class="container">
     <label for="area">בחר אזור:</label>
-    <select id="area">
+    <select id="area" onchange="updateAreaInfo()">
       <option value="center">מרכז סלוניקי</option>
       <option value="west">מערב סלוניקי</option>
       <option value="kalamaria">קמנבריה</option>
+    </select>
+
+    <div id="areaDescription" class="area-info"></div>
+
+    <label for="rooms">סוג דירה:</label>
+    <select id="rooms">
+      <option value="studio">סטודיו</option>
+      <option value="2">שני חדרים</option>
+      <option value="3">שלושה חדרים</option>
     </select>
 
     <label>מחיר רכישה (באירו):</label>
@@ -41,6 +51,8 @@
 
     <label>שכר דירה חודשי (באירו):</label>
     <input type="number" id="rent" value="500" />
+
+    <label><input type="checkbox" id="includeCosts" /> כולל הוצאות רכישה (9.3%)</label>
 
     <button onclick="analyzeDeal()">נתח עסקה</button>
 
@@ -54,18 +66,49 @@
 
   <script>
     const areaOptions = {
-      center: { min_price_per_m2: 1800, max_price_per_m2: 2500, min_rent: 450, max_rent: 550 },
-      west: { min_price_per_m2: 1300, max_price_per_m2: 1600, min_rent: 350, max_rent: 450 },
-      kalamaria: { min_price_per_m2: 1100, max_price_per_m2: 1450, min_rent: 300, max_rent: 400 },
+      center: {
+        min_price_per_m2: 1800,
+        max_price_per_m2: 2500,
+        min_rent: 450,
+        max_rent: 550,
+        description: 'המחירים במרכז סלוניקי נעים בין 90,000 ל-120,000 אירו לדירת שני חדרים באזור זה.'
+      },
+      west: {
+        min_price_per_m2: 1300,
+        max_price_per_m2: 1600,
+        min_rent: 350,
+        max_rent: 450,
+        description: 'המחירים במערב סלוניקי נעים סביב 70,000 ל-95,000 אירו לדירת שני חדרים.'
+      },
+      kalamaria: {
+        min_price_per_m2: 1100,
+        max_price_per_m2: 1450,
+        min_rent: 300,
+        max_rent: 400,
+        description: 'בקמנבריה מחירי השוק לדירת שני חדרים הם בין 60,000 ל-80,000 אירו.'
+      }
     };
+
+    function updateAreaInfo() {
+      const areaKey = document.getElementById('area').value;
+      const desc = areaOptions[areaKey].description;
+      document.getElementById('areaDescription').innerText = desc;
+    }
+
+    window.onload = updateAreaInfo;
 
     function analyzeDeal() {
       const areaKey = document.getElementById('area').value;
       const areaData = areaOptions[areaKey];
 
-      const price = parseFloat(document.getElementById('price').value);
+      let price = parseFloat(document.getElementById('price').value);
       const size = parseFloat(document.getElementById('size').value);
       const rent = parseFloat(document.getElementById('rent').value);
+      const includeCosts = document.getElementById('includeCosts').checked;
+
+      if (includeCosts) {
+        price *= 1.093; // הוספת 9.3% הוצאות רכישה
+      }
 
       const pricePerM2 = price / size;
       let priceRemark = '', priceScore = 0;
