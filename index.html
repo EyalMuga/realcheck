@@ -23,6 +23,7 @@
     .graph-container { text-align: center; }
     .area-info { font-size: 1.1rem; color: #0d47a1; margin-top: 1rem; }
     .note { font-size: 0.9rem; color: red; }
+    .detailed-summary { font-size: 1rem; margin-top: 1rem; padding: 1rem; background-color: #e3f2fd; border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -64,6 +65,11 @@
   <div class="graph-container">
     <h2>גרף השוואת המחיר למ\"ר</h2>
     <canvas id="priceGraph" width="300" height="60" style="margin: 20px auto; display: block;"></canvas>
+  </div>
+
+  <div class="detailed-summary" style="display:none" id="detailedSummary">
+    <h3>סיכום העסקה</h3>
+    <p id="detailedInfo"></p>
   </div>
 
   <script>
@@ -151,6 +157,9 @@
       document.getElementById('note').innerText = note;
       document.getElementById('progress').style.width = (score / 8) * 100 + '%';
       document.getElementById('result').style.display = 'block';
+
+      document.getElementById('detailedSummary').style.display = 'block';
+      document.getElementById('detailedInfo').innerText = `דירת ${size} מ"ר במחיר €${price}, המחיר למ"ר הוא €${pricePerM2.toFixed(2)}. ${note}`;
     }
   </script>
 
