@@ -21,6 +21,8 @@
     label { font-weight: bold; margin-top: 1rem; display: block; }
     h2 { font-size: 1.5rem; margin-top: 2rem; color: #0d47a1; }
     .graph-container { text-align: center; }
+    .area-info { font-size: 1.1rem; color: #0d47a1; margin-top: 1rem; }
+    .note { font-size: 0.9rem; color: red; }
   </style>
 </head>
 <body>
@@ -30,7 +32,7 @@
   </header>
   <div class="container">
     <label for="area">בחר שכונה:</label>
-    <select id="area">
+    <select id="area" onchange="updateAreaInfo()">
       <option value="center">מרכז סלוניקי</option>
       <option value="kalamaria">קמנבריה</option>
       <option value="vardaris">ווארדאריס</option>
@@ -38,6 +40,8 @@
       <option value="ano_poli">אנו פוליס</option>
       <option value="monastiriou">הארון מונסטיריון</option>
     </select>
+
+    <div id="areaDescription" class="area-info"></div>
 
     <label for="price">מחיר רכישה (באירו):</label>
     <input type="number" id="price" value="90000" />
@@ -52,6 +56,7 @@
     <div id="result" class="result" style="display:none">
       <h2>תוצאות ניתוח העסקה</h2>
       <p id="summary"></p>
+      <p id="note" class="note"></p>
       <div class="progress-bar"><div id="progress" class="progress" style="width: 0%"></div></div>
     </div>
   </div>
@@ -63,13 +68,21 @@
 
   <script>
     const areaProfiles = {
-      "center": { name: "מרכז סלוניקי", min_price: 1800, max_price: 2500 },
-      "kalamaria": { name: "קמנבריה", min_price: 1100, max_price: 1450 },
-      "vardaris": { name: "ווארדאריס", min_price: 1500, max_price: 1900 },
-      "toumba": { name: "טומבה", min_price: 1250, max_price: 1600 },
-      "ano_poli": { name: "אנו פוליס", min_price: 1400, max_price: 1800 },
-      "monastiriou": { name: "הארון מונסטיריון", min_price: 1000, max_price: 1350 }
+      "center": { name: "מרכז סלוניקי", min_price: 1800, max_price: 2500, price_range: "מחירי הדירות נעים בין 90,000 ל-120,000 אירו לדירת שני חדרים." },
+      "kalamaria": { name: "קמנבריה", min_price: 1100, max_price: 1450, price_range: "מחירי הדירות נעים בין 60,000 ל-80,000 אירו לדירת שני חדרים." },
+      "vardaris": { name: "ווארדאריס", min_price: 1500, max_price: 1900, price_range: "מחירי הדירות נעים בין 75,000 ל-100,000 אירו לדירת שני חדרים." },
+      "toumba": { name: "טומבה", min_price: 1250, max_price: 1600, price_range: "מחירי הדירות נעים בין 70,000 ל-95,000 אירו לדירת שני חדרים." },
+      "ano_poli": { name: "אנו פוליס", min_price: 1400, max_price: 1800, price_range: "מחירי הדירות נעים בין 75,000 ל-100,000 אירו לדירת שני חדרים." },
+      "monastiriou": { name: "הארון מונסטיריון", min_price: 1000, max_price: 1350, price_range: "מחירי הדירות נעים בין 60,000 ל-80,000 אירו לדירת שני חדרים." }
     };
+
+    function updateAreaInfo() {
+      const areaKey = document.getElementById('area').value;
+      const area = areaProfiles[areaKey];
+      document.getElementById('areaDescription').innerText = area.price_range;
+    }
+
+    window.onload = updateAreaInfo;
 
     function drawPriceBar(currentPrice, min, max) {
       const canvas = document.getElementById('priceGraph');
@@ -113,16 +126,20 @@
 
       const rent = parseFloat(document.getElementById('rent').value);
       const rentRatio = (rent * 12) / price;
-      
+
       let score = 0;
+      let note = '';
+
       if (pricePerM2 < area.min_price) score += 2;
       else if (pricePerM2 <= area.max_price) score += 4;
       else score += 1;
 
-      if (rentRatio > 0.07) score += 4;
-      else if (rentRatio > 0.05) score += 3;
-      else if (rentRatio > 0.035) score += 2;
-      else score += 1;
+      if (rentRatio > 0.07) {
+        note = "שים לב, המחיר לשכירות גבוה יותר מהמקובל באזור.";
+        score -= 1;
+      } else if (rentRatio > 0.05) {
+        note = "השכירות בטווח גבוה – יש לשקול מחדש.";
+      }
 
       let summary = '';
       if (score >= 7) summary = '✅ עסקה מצוינת';
@@ -131,6 +148,7 @@
       else summary = '⚠️ עסקה חלשה';
 
       document.getElementById('summary').innerText = `${summary} (ציון: ${score}/8)`;
+      document.getElementById('note').innerText = note;
       document.getElementById('progress').style.width = (score / 8) * 100 + '%';
       document.getElementById('result').style.display = 'block';
     }
